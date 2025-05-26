@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
-display_name: machine_failure_training_pipeline
-experiment_name: machine-failure-training
+display_name: cicd-complete-pipeline
+experiment_name: decision_tree_training_pipeline
 description: Training Pipeline to predict price of used-cars using Decision Tree Regressor
 inputs:
   input:
@@ -50,7 +50,7 @@ jobs:
     search_space:
       criterion:
         type: choice
-        values: ["squared_error", "friedman_mse"]
+        values: ["mse"]
       max_depth:
         type: choice
         values: [3,5,10]
@@ -73,7 +73,7 @@ jobs:
       --model_info_output_path ${{outputs.model_info_output_path}}
     environment: azureml:machine_learning_E2E@latest
     inputs:
-      model_name: "machine_failure_prediction_model"
+      model_name: "used_car_regression_model"
       model_path: ${{parent.jobs.sweep_step.outputs.model_output}}
     outputs:
       model_info_output_path: ${{parent.outputs.model_info_output_path}}

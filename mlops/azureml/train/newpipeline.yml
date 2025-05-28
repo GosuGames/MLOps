@@ -1,12 +1,16 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
-display_name: cicd-complete-pipeline
-experiment_name: decision_tree_training_pipeline
+display_name: used-car-price-prediction-pipeline
+experiment_name: used_car_price_prediction
 description: Training Pipeline to predict price of used-cars using Decision Tree Regressor
+
 inputs:
   input:
     type: uri_file
-    path: azureml:machine-failure-data@latest
+    path: azureml:used_car_data@latest
+  test_train_ratio:
+    type: number
+    default: 0.2
 
 outputs:
   train_data:
@@ -25,12 +29,14 @@ jobs:
     code: ../../../data-science/src
     command: >-
       python prep.py 
-      --raw_data ${{inputs.raw_data}} 
+      --data ${{inputs.data}} 
+      --test_train_ratio ${{inputs.test_train_ratio}}
       --train_data ${{outputs.train_data}}
       --test_data ${{outputs.test_data}}
     environment: azureml:machine_learning_E2E@latest
     inputs:
-      raw_data: ${{parent.inputs.input}}
+      data: ${{parent.inputs.input}}
+      test_train_ratio: ${{parent.inputs.test_train_ratio}}
     outputs:
       train_data: ${{parent.outputs.train_data}}
       test_data: ${{parent.outputs.test_data}}
@@ -46,14 +52,14 @@ jobs:
       model_output:
         type: mlflow_model
     sampling_algorithm: random
-    trial: ./train.yml  # Refers to a separate command component
+    trial: ./train.yml
     search_space:
       criterion:
         type: choice
         values: ["mse"]
       max_depth:
         type: choice
-        values: [3,5,10]
+        values: [3, 5, 10, null]
     objective:
       goal: minimize
       primary_metric: MSE
@@ -68,12 +74,9 @@ jobs:
     code: ../../../data-science/src
     command: >-
       python register.py 
-      --model_name ${{inputs.model_name}} 
-      --model_path ${{inputs.model_path}} 
-      --model_info_output_path ${{outputs.model_info_output_path}}
+      --model ${{inputs.model}}
     environment: azureml:machine_learning_E2E@latest
     inputs:
-      model_name: "used_car_regression_model"
-      model_path: ${{parent.jobs.sweep_step.outputs.model_output}}
+      model: ${{parent.jobs.sweep_step.outputs.model_output}}
     outputs:
       model_info_output_path: ${{parent.outputs.model_info_output_path}}

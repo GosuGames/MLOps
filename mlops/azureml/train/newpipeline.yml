@@ -8,9 +8,7 @@ inputs:
   input:
     type: uri_file
     path: azureml:used_car_data@latest
-  test_train_ratio:
-    type: number
-    default: 0.2
+  test_train_ratio: 0.2  # <-- directly assign numeric value without type
 
 outputs:
   train_data:
@@ -59,7 +57,7 @@ jobs:
         values: ["mse"]
       max_depth:
         type: choice
-        values: [3, 5, 10, null]
+        values: [3, 5, 10]  # <-- removed null
     objective:
       goal: minimize
       primary_metric: MSE
